@@ -15,6 +15,7 @@ import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.jooq.SpringTransactionProvider;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -30,6 +31,8 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.springboot.exception.InvalidStudentException;
 import com.springboot.model.Student;
+
+import com.springboot.model.ValidStudentList;
 
 @RestController
 @RequestMapping("/student")
@@ -56,7 +59,8 @@ public class StudentController {
 		throw new InvalidStudentException("Student Not Present");
 	}
 
-	@GetMapping("/query")
+	@GetMapping(value="/query",produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
+	
 	@ResponseStatus(HttpStatus.ACCEPTED)
 	public ResponseEntity<List<Student>> getStudentByQueryParam(
 			@RequestParam(value = "id", required = false, defaultValue="0") int studentId,
@@ -94,7 +98,7 @@ public class StudentController {
 			throw new InvalidStudentException("Student Not Present");
 	}
 	
-	@GetMapping("/all")
+	@GetMapping(value="/all",produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
 	@ResponseStatus(HttpStatus.ACCEPTED)
 	public ResponseEntity<List<Student>> getAllStudents() {
 	//studentList.add(student1);
@@ -105,8 +109,16 @@ public class StudentController {
 	@PostMapping
 	public ResponseEntity<Student> addStudent(@Valid @RequestBody Student std) {
 		studentList.add(std);
-		URI location = ServletUriComponentsBuilder.fromCurrentRequestUri().path("/{id}")
-				.buildAndExpand(std.getRoll_no()).toUri();
+		URI location = ServletUriComponentsBuilder.fromCurrentRequestUri().path("/{id}/{nane}")
+				.buildAndExpand(std.getRoll_no(),std.getName()).toUri();
+		return ResponseEntity.created(location).build();
+	}
+	
+	@PostMapping(value="/addAll")
+	public ResponseEntity<Student> addAllStudent(@Valid @RequestBody ValidStudentList std) {
+		studentList.addAll(std.getListOfStudent());
+		URI location = ServletUriComponentsBuilder.fromCurrentRequestUri().path("/all")
+				.buildAndExpand().toUri();
 		return ResponseEntity.created(location).build();
 	}
     

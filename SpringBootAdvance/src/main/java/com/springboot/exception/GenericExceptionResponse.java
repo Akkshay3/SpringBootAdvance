@@ -2,7 +2,9 @@ package com.springboot.exception;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.validation.FieldError;
 
@@ -14,7 +16,7 @@ public class GenericExceptionResponse {
 	private Date timeStamp;
 	private String message;
 	private String details;
-	private List<ApiValidationError> subErrors;
+	private Map<String,List<ApiValidationError>> subErrors;
 
 	public GenericExceptionResponse(Date timeStamp, String message, String details) {
 		super();
@@ -47,20 +49,24 @@ public class GenericExceptionResponse {
 		this.details = details;
 	}
 
-	public List<ApiValidationError> getSubErrors() {
+	public Map<String,List<ApiValidationError>> getSubErrors() {
 		return subErrors;
 	}
 
-	public void setSubErrors(List<ApiValidationError> subErrors) {
+	public void setSubErrors(Map<String,List<ApiValidationError>> subErrors) {
 		this.subErrors = subErrors;
 	}
 	
 	private void addValidationError(String object, String field, Object rejectedValue, String message) {
 		ApiValidationError validationError = new ApiValidationError(object, field, rejectedValue, message);
 		if (this.subErrors == null) {
-			this.subErrors = new ArrayList<>();
+			this.subErrors = new HashMap<String,List<ApiValidationError>>();
 		}
-		this.subErrors.add(validationError);
+		int endIndex = field.indexOf(".");
+		String key = field.substring(0,endIndex);
+		List<ApiValidationError> validationErrorList = this.subErrors.getOrDefault(key, new ArrayList<>());
+		validationErrorList.add(validationError);
+		this.subErrors.put(key,validationErrorList);
 	}
 
 	private void addValidationError(FieldError fieldError) {
